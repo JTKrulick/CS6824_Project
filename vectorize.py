@@ -3,6 +3,7 @@ import os
 import pickle
 from gensim import corpora
 import gensim 
+from gensim.corpora import Dictionary
 
 def createWordFrequencyFile(fileLoc = "./data/wordFrequency.txt",useCache=True):
     if (useCache==True and os.path.isfile(fileLoc)):
@@ -21,12 +22,12 @@ def createWordFrequencyFile(fileLoc = "./data/wordFrequency.txt",useCache=True):
 
 def createDictionary(dictLoc="./data/dict",useCache=True):
     if (useCache==True and os.path.isfile(dictLoc)):
-        dictionary =pickle.load(open(dictLoc,'rb'))
+        dictionary = Dictionary.load_from_text(dictLoc)
     else:
         tg = tweetGenerator.tweetGenerator()
         wf = createWordFrequencyFile()
-        dictionary = corpora.Dictionary(tg)
-        pickle.dump(dictionary,open(dictLoc,'wb'))
+        dictionary = Dictionary(tg)
+        dct.save_as_text(dictLoc) 
     return dictionary
 
 
