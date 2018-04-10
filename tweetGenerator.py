@@ -3,8 +3,13 @@ import gzip
 import glob, os
 import json
 currentFullTweet = ""#TODO delete
+import re
+def tweetGenerator(tweetFolderPath= "./data/tweets",stopWordFile = "./data/stopWords.txt"):
+    stopWordList = []
+    with open(stopWordFile, 'r') as stopWords:
+        for stopWord in stopWords:
+          stopWordList.append(stopWord.strip())
 
-def tweetGenerator(tweetFolderPath= "./data/tweets"):
     files = glob.glob(tweetFolderPath +"/*.gz")
     for currentFile in files:
         with gzip.open(currentFile,"rb") as file:
@@ -15,7 +20,7 @@ def tweetGenerator(tweetFolderPath= "./data/tweets"):
 
                 if tweetFilter(jsonTweet)  == False:
                     continue
-                tweet = wordFilter(jsonTweet)
+                tweet = wordFilter(jsonTweet, stopWordList)
                 yield tweet
 
 
@@ -31,10 +36,13 @@ def tweetFilter(jsonTweet):
 
 #given a valid tweet, transform json into a useful tweet line
 #including things such as stop words
-def wordFilter(jsonTweet):
+def wordFilter(jsonTweet, stopWordList):
     #Something like a stop list would go here
     hashtags = " ".join([a['text'] for a in jsonTweet['entities']['hashtags']])
-    return jsonTweet['text']+" " + hashtags
+    tweetAndHashtag = jsonTweet['text']+" " + hashtags
+    removedSC = re.sub('[^A-Za-z 0-9]+', '', tweetAndHashtag)#TODO Fix this
+    tweetList = [word for word in removedSC.lower().split() if word not in stopWordList]
+    return tweetList
 
 
 
