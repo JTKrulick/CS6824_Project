@@ -7,6 +7,7 @@ import gensim
 from gensim.corpora import Dictionary
 #datapath = "./data/sample-patients-info.tsv"
 datapath = './data/sample-patients-info-shuf.tsv'
+stopWordFile = "./data/stopWords.txt"
 def forumGeneratorRawString(dataPath= datapath):
     with open(dataPath, 'r') as data:
         data.next()#skip the column names
@@ -30,7 +31,7 @@ def forumGeneratorRawString(dataPath= datapath):
             else:
                 yield post_content
 
-def forumGenerator(dictionary=None ,dataPath= datapath, stopWordFile="./data/stopWords.txt"):
+def forumGenerator(dictionary=None ,dataPath= datapath, stopWordFile=stopWordFile):
     stopWordList=[]
     with open(stopWordFile, 'r') as stopWords:
         for stopWord in stopWords:
@@ -55,15 +56,25 @@ def createDictionary(dictLoc="./data/generated/forumDictionary",useCache=False):
         dictionary.save_as_text(dictLoc)
     return dictionary
 
+class forumIterable:
+    dic = None
+    datapath = None
+    stopwordlist = None
+    def __init__(self,dictionary, path=datapath, stopwordlist=stopWordFile):
+        self.dic = dictionary
+        self.datapath = path
+        self.stopwordlist = stopwordlist
+    def __iter__(self):
+       for line in  forumGenerator(self.dic,self.datapath,self.stopwordlist):
+            yield line
+
+
 def lda(topics = 10):
     dic =createDictionary(dictLoc="./data/generated/forumDictionary",useCache=True)
     tg = forumGenerator(dic)
-    corpus = []
-    for val in tg:
-        corpus.append(val)
-    lda = gensim.models.ldamodel.LdaModel(corpus,topics,dic)
+    fi = forumIterable(dic,datapath,stopWordFile)
+    lda = gensim.models.ldamodel.LdaModel(fi,topics,dic)
     return lda
-
 
 if __name__ == '__main__':
     ldaResult = lda(topics = 10)
